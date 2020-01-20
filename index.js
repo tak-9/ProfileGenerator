@@ -2,27 +2,27 @@ const fs = require("fs");
 const axios = require("axios");
 const inquirer = require("inquirer");
 var pdf = require('html-pdf');
-var options = { format: 'Letter' };
-
 var generateHTML = require("./generateHTML.js");
-
 
 //const username = "ceckenrode";
 // const username = "tak-9";
 //const username = "torvalds";
 var username;
 
-var avatar_url;
-var name;
-var company;
-var bio;
-var location;
-var html_url;
-var blog;
-var public_repos;
-var followers;
-var following;
-var starredNum;
+var userProfile = {
+    color: "pink",
+    avatar_url: "",
+    name: "",
+    company: "",
+    bio: "",
+    location: "",
+    html_url: "",
+    blog: "",
+    public_repos: 0,
+    followers: 0,
+    following: 0,
+    starredNum: 0
+};
 
 inquirer
   .prompt({
@@ -42,21 +42,23 @@ function getDataFromWeb(ans) {
             .then(function (res) {
                 //console.log("header",res.headers);
                 //console.log(res.data);
-                avatar_url = res.data.avatar_url;
-                name = res.data.name;
-                company = res.data.company;
-                location = res.data.location;
-                bio = res.data.bio;
-                html_url = res.data.html_url;
-                blog = res.data.blog;
-                public_repos = res.data.public_repos;
-                followers = res.data.followers;
-                following = res.data.following;
+                userProfile.avatar_url = res.data.avatar_url;
+                userProfile.name = res.data.name;
+                userProfile.company = res.data.company;
+                userProfile.location = res.data.location;
+                userProfile.bio = res.data.bio;
+                userProfile.html_url = res.data.html_url;
+                userProfile.blog = res.data.blog;
+                userProfile.public_repos = res.data.public_repos;
+                userProfile.followers = res.data.followers;
+                userProfile.following = res.data.following;
                 console.log("--- promiseGetUserInfo end ---");
                 resolve();
             })
     });
     
+    // The number of stars needs to be obtained from another URL. 
+    // If there are more stars which does not fit into one page, the URL must be called multiple times.
     var promiseGetStarred = new Promise(function(resolve, reject) { 
         console.log("=== promiseGetStarred start ===");
         const starredUrl = `https://api.github.com/users/${username}/starred?per_page=30`;
@@ -82,15 +84,15 @@ function getDataFromWeb(ans) {
                 axios.get(starredLastPageUrl)
                 .then(function(res) { 
                     StarredNumInLastPage = res.data.length;
-                    starredNum = (30 * (lastPageNum - 1)) + StarredNumInLastPage ;
-                    console.log("starredNum: "+ starredNum);
+                    userProfile.starredNum = (30 * (lastPageNum - 1)) + StarredNumInLastPage ;
+                    console.log("starredNum: "+ userProfile.starredNum);
                     console.log("=== promiseGetStarred end ===");
                     resolve();
                 });
             } else {
                 // 'link' does not exist 
-                starredNum = res.data.length;
-                console.log("starredNum: "+ starredNum);
+                userProfile.starredNum = res.data.length;
+                console.log("starredNum: "+ userProfile.starredNum);
                 console.log("=== promiseGetStarred end ===");
                 resolve();
             }
@@ -100,23 +102,10 @@ function getDataFromWeb(ans) {
     Promise.all([promiseGetUserInfo, promiseGetStarred]).then(printValues);
 }
 
-
 function printValues(){ 
-     const data = {
-        color: "pink",
-        avatar_url: avatar_url,
-        name: name,
-        company: company,
-        bio: bio,
-        location: location,
-        html_url: html_url,
-        blog: blog,
-        public_repos: public_repos,
-        followers: followers,
-        following: following,
-        starredNum: starredNum};
-    //console.log(data);
-    const HTMLstr = generateHTML.createHTML(data);
+
+    //console.log(userProfile);
+    const HTMLstr = generateHTML.createHTML(userProfile);
     console.log(HTMLstr);
 
     fs.writeFile("output.html", HTMLstr, function(){
@@ -125,7 +114,7 @@ function printValues(){
 
     pdf.create(HTMLstr).toFile('./output.pdf', function(err, res) {
         if (err) return console.log(err);
-        console.log(res); // { filename: '/app/businesscard.pdf' }
+        console.log(res); // { filename: 'output.pdf' }
       });
 
 };
