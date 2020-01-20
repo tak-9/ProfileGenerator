@@ -26,6 +26,7 @@ const colors = {
   };
   
 function createHTML(data) {
+    // The pdf converter does not support flex!  
     const headHTML = `<!DOCTYPE html>
     <html lang="en">
      <head>
@@ -91,6 +92,8 @@ function createHTML(data) {
            position: relative;
            margin: 0 auto;
            margin-bottom: -50px;
+           align: center;
+           text-align: center;
            display: flex;
            justify-content: center;
            flex-wrap: wrap;
