@@ -13,6 +13,7 @@ $ install npm path
 
 ## Usage 
 1. Open command prompt or terminal and enter as follows.
+
 $ node index.js 
 
 2. Answer questions to the interactive prompt. 
