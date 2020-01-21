@@ -3,8 +3,12 @@ A command-line application that dynamically generates a PDF profile from a GitHu
 
 ## Setup
 1. Install npm. Open command prompt or terminal and enter as follows.
+
+
 $ install npm axios
+
 $ install npm html-pdf
+
 $ install npm path
 
 ## Usage 
