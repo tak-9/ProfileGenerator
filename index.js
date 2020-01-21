@@ -4,11 +4,7 @@ const inquirer = require("inquirer");
 var pdf = require('html-pdf');
 var generateHTML = require("./generateHTML.js");
 
-//const username = "ceckenrode";
-// const username = "tak-9";
-//const username = "torvalds";
-var username;
-
+var username; // This is git username. To be entered by user prompt. 
 var userProfile = {
     color: "pink",
     avatar_url: "",
@@ -26,21 +22,21 @@ var userProfile = {
 
 inquirer
   .prompt({
-    message: "Enter your GitHub username",
+    message: "Enter your GitHub username: ",
     name: "username"
   })
-  .then(getDataFromWeb);
+  .then(getDataFromWeb)
+  .catch(() => {console.log("Error in Inquirer.")});
 
 
 function getDataFromWeb(ans) { 
     var promiseGetUserInfo = new Promise(function(resolve, reject) {
-        console.log("--- promiseGetUserInfo start ---");
+        // console.log("--- promiseGetUserInfo start ---");
         username = ans.username;
-        console.log(username);
+        // console.log(username);
         const usersUrl = `https://api.github.com/users/${username}`;
         axios.get(usersUrl)
-            .then(function (res) {
-                //console.log("header",res.headers);
+            .then(function(res) {
                 //console.log(res.data);
                 userProfile.avatar_url = res.data.avatar_url;
                 userProfile.name = res.data.name;
@@ -52,15 +48,23 @@ function getDataFromWeb(ans) {
                 userProfile.public_repos = res.data.public_repos;
                 userProfile.followers = res.data.followers;
                 userProfile.following = res.data.following;
-                console.log("--- promiseGetUserInfo end ---");
+                // console.log("--- promiseGetUserInfo end ---");
                 resolve();
+            })
+            .catch(function(error){
+                if (error.response.status == "404"){ 
+                    console.log(`Error: Specified user does not exist. ${error.response.status} ${error.response.statusText}`);
+                } else { 
+                    console.log(`Error: ${error.response.status} ${error.response.statusText}`)
+                }
+                reject();
             })
     });
     
     // The number of stars needs to be obtained from another URL. 
     // If there are more stars which does not fit into one page, the URL must be called multiple times.
     var promiseGetStarred = new Promise(function(resolve, reject) { 
-        console.log("=== promiseGetStarred start ===");
+        // console.log("=== promiseGetStarred start ===");
         const starredUrl = `https://api.github.com/users/${username}/starred?per_page=30`;
         axios.get(starredUrl)
         .then(function(res){ 
@@ -85,28 +89,44 @@ function getDataFromWeb(ans) {
                 .then(function(res) { 
                     StarredNumInLastPage = res.data.length;
                     userProfile.starredNum = (30 * (lastPageNum - 1)) + StarredNumInLastPage ;
-                    console.log("starredNum: "+ userProfile.starredNum);
-                    console.log("=== promiseGetStarred end ===");
+                    // console.log("starredNum: "+ userProfile.starredNum);
+                    // console.log("=== promiseGetStarred end ===");
                     resolve();
+                })
+                .catch( () => {
+                    if (error.response.status == "404"){ 
+                        console.log(`Error: Specified user does not exist. ${error.response.status} ${error.response.statusText}`);
+                    } else { 
+                        console.log(`Error: ${error.response.status} ${error.response.statusText}`)
+                    }
+                    reject();    
                 });
             } else {
                 // 'link' does not exist 
                 userProfile.starredNum = res.data.length;
-                console.log("starredNum: "+ userProfile.starredNum);
-                console.log("=== promiseGetStarred end ===");
+                // console.log("starredNum: "+ userProfile.starredNum);
+                // console.log("=== promiseGetStarred end ===");
                 resolve();
             }
         })
+        .catch((error) => { 
+            if (error.response.status == "404"){ 
+                console.log(`Error: Specified user does not exist. ${error.response.status} ${error.response.statusText}`);
+            } else { 
+                console.log(`Error: ${error.response.status} ${error.response.statusText}`)
+            }        
+        })
     })
 
-    Promise.all([promiseGetUserInfo, promiseGetStarred]).then(printValues);
+    Promise.all([promiseGetUserInfo, promiseGetStarred])
+        .then(printValues)
+        .catch(() => {});
 }
 
 function printValues(){ 
-
-    //console.log(userProfile);
+    // console.log(userProfile);
     const HTMLstr = generateHTML.createHTML(userProfile);
-    console.log(HTMLstr);
+    // console.log(HTMLstr);
 
     fs.writeFile("output.html", HTMLstr, function(){
         console.log("Written to output.html");   
