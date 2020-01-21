@@ -1,10 +1,12 @@
 const fs = require("fs");
 const axios = require("axios");
 const inquirer = require("inquirer");
-var pdf = require('html-pdf');
-var generateHTML = require("./generateHTML.js");
+const path = require("path");
+const pdf = require('html-pdf');
+const generateHTML = require("./generateHTML.js");
+var defaultPdfFileName = path.resolve( __dirname + "/output.pdf");
+var defaultHtmlFilename = path.resolve( __dirname + "/output.html");
 
-var username; // This is git username. To be entered by user prompt. 
 var userProfile = {
     color: "pink",
     avatar_url: "",
@@ -20,11 +22,34 @@ var userProfile = {
     starredNum: 0
 };
 
+// There are be entered by user prompt.
+var username; // This is git username. 
+var pdfFilename; 
+var htmlFilename;
+
 inquirer
-  .prompt({
+  .prompt([{
+    type: "input",
     message: "Enter your GitHub username: ",
     name: "username"
-  })
+  }, {
+    type: "list",
+    message: "Choose color: ",
+    name: "color",
+    choices: ["green", "blue", "pink", "red"],
+    default: "pink"
+  }, {
+    type: "input",
+    message: "Enter output PDF filename: ",
+    name: "pdfFilename",
+    default: defaultPdfFileName    
+  }, {
+    type: "input",
+    message: "Enter output HTML filename: ",
+    name: "htmlFilename",
+    default: defaultHtmlFilename
+  }
+  ])
   .then(getDataFromWeb)
   .catch(() => {console.log("Error in Inquirer.")});
 
@@ -33,10 +58,15 @@ function getDataFromWeb(ans) {
     var promiseGetUserInfo = new Promise(function(resolve, reject) {
         // console.log("--- promiseGetUserInfo start ---");
         username = ans.username;
+        userProfile.color = ans.color;
+        htmlFilename = ans.htmlFilename;
+        pdfFilename = ans.pdfFilename;
+
         // console.log(username);
         const usersUrl = `https://api.github.com/users/${username}`;
         axios.get(usersUrl)
-            .then(function(res) {
+            .then((res) => {
+                // TODO: Need error handling for null.
                 //console.log(res.data);
                 userProfile.avatar_url = res.data.avatar_url;
                 userProfile.name = res.data.name;
@@ -51,7 +81,7 @@ function getDataFromWeb(ans) {
                 // console.log("--- promiseGetUserInfo end ---");
                 resolve();
             })
-            .catch(function(error){
+            .catch((error) => {
                 if (error.response.status == "404"){ 
                     console.log(`Error: Specified user does not exist. ${error.response.status} ${error.response.statusText}`);
                 } else { 
@@ -67,7 +97,7 @@ function getDataFromWeb(ans) {
         // console.log("=== promiseGetStarred start ===");
         const starredUrl = `https://api.github.com/users/${username}/starred?per_page=30`;
         axios.get(starredUrl)
-        .then(function(res){ 
+        .then((res) => { 
             // Read this doc. https://developer.github.com/v3/guides/traversing-with-pagination/
             // res.headers.link extracts 'Link' in HTTP response HEADER. 
             // You will get something like this if there are more than 30 (or per_page) entries. (30 is default when per_page paramater is not given.)
@@ -86,14 +116,14 @@ function getDataFromWeb(ans) {
                 // Get Starred Num from last page.
                 const starredLastPageUrl = `https://api.github.com/users/${username}/starred?page=${lastPageNum}&per_page=30`;
                 axios.get(starredLastPageUrl)
-                .then(function(res) { 
+                .then((res) => { 
                     StarredNumInLastPage = res.data.length;
                     userProfile.starredNum = (30 * (lastPageNum - 1)) + StarredNumInLastPage ;
                     // console.log("starredNum: "+ userProfile.starredNum);
                     // console.log("=== promiseGetStarred end ===");
                     resolve();
                 })
-                .catch( () => {
+                .catch(() => {
                     if (error.response.status == "404"){ 
                         console.log(`Error: Specified user does not exist. ${error.response.status} ${error.response.statusText}`);
                     } else { 
@@ -128,13 +158,21 @@ function printValues(){
     const HTMLstr = generateHTML.createHTML(userProfile);
     // console.log(HTMLstr);
 
-    fs.writeFile("output.html", HTMLstr, function(){
-        console.log("Written to output.html");   
+    fs.writeFile(htmlFilename, HTMLstr, (err) => {
+        if (err){
+            console.log("File write error. " + err);   
+        } else {
+            console.log("Written to " + htmlFilename);   
+        }
     })
 
-    pdf.create(HTMLstr).toFile('./output.pdf', function(err, res) {
-        if (err) return console.log(err);
-        console.log(res); // { filename: 'output.pdf' }
+    pdf.create(HTMLstr).toFile(pdfFilename, (err, res) => {
+        if (err) {
+            // BUG: This API does not return err even if you specify invalid filename.
+            // For examle, invalid drive name k:\output.pdf  
+            console.log("Write PDF file error." + err);
+        } else {
+            console.log("Written to: " +  res.filename); 
+        }
       });
-
 };
