@@ -2,7 +2,9 @@
 A command-line application that dynamically generates a PDF profile from a GitHub username.
 
 ## Setup
-1. Install npm. Open command prompt or terminal and enter as follows.
+1. Install node.js https://nodejs.org
+
+2. Install npm. Open command prompt or terminal and enter as follows.
 
 
 $ install npm axios
@@ -29,6 +31,8 @@ The PDF converter does not return error, even if you specify an invlid filename 
 
 
 ## Credit 
+https://nodejs.org
+
 https://www.npmjs.com/package/html-pdf
 
 https://www.npmjs.com/package/inquirer
