@@ -69,10 +69,26 @@ function getDataFromWeb(ans) {
                 // TODO: Need error handling for null.
                 //console.log(res.data);
                 userProfile.avatar_url = res.data.avatar_url;
-                userProfile.name = res.data.name;
-                userProfile.company = res.data.company;
-                userProfile.location = res.data.location;
-                userProfile.bio = res.data.bio;
+                if (res.data.name === null) { 
+                    userProfile.name = " ";
+                } else {
+                    userProfile.name = res.data.name;
+                }
+                if (res.data.company === null) {
+                    userProfile.company = " ";
+                } else {
+                    userProfile.company = res.data.company;
+                }
+                if (res.data.location === null) {
+                    userProfile.location = " ";
+                } else {
+                    userProfile.location = res.data.location;
+                }
+                if (res.data.bio === null) {
+                    userProfile.bio = " ";
+                } else {
+                    userProfile.bio = res.data.bio;
+                }
                 userProfile.html_url = res.data.html_url;
                 userProfile.blog = res.data.blog;
                 userProfile.public_repos = res.data.public_repos;
