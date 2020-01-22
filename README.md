@@ -13,6 +13,8 @@ $ install npm html-pdf
 
 $ install npm path
 
+pm install inquirer
+
 ## Usage 
 1. Open command prompt or terminal and enter as follows.
 
