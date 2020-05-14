@@ -11,7 +11,7 @@ A command-line application that dynamically generates a PDF profile from a GitHu
 2. Install npm. Open command prompt or terminal and enter as follows.
 
 ```
-$ npm install` 
+$ npm install
 ```
 
 ## Usage 
