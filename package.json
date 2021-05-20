@@ -10,7 +10,7 @@
   "description": "profile generator",
   "dependencies": {
     "axios": "^0.19.1",
-    "html-pdf": "^2.2.0",
+    "html-pdf": "^3.0.1",
     "inquirer": "^7.0.3",
     "path": "^0.12.7",
     "phantom-html-to-pdf": "^0.6.0"
